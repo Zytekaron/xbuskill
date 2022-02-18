@@ -1,5 +1,8 @@
 # xbuskill
 
+`xbuskill` is a command-line utility to allow you to run cleanup commands when
+enabled and a specific USB device is unplugged. Designed to work on Linux.
+
 ## Setup
 
 ### Figure out which USB device you want to track
@@ -19,7 +22,8 @@ ENV{DEVTYPE}=="usb_device", \
 ENV{ID_SERIAL_SHORT}=="61252038755497360876", \
 RUN+="/usr/bin/xbuskill execute"
 ```
-2. Modify the second to last line, using the `ID_SERIAL` or `ID_SERIAL_SHORT` for your USB device (if you know what you're doing, you can use other fields too)
+2. Modify the second to last line, using the `ID_SERIAL` or `ID_SERIAL_SHORT` for
+   your USB device (if you know what you're doing, you can use other fields too)
 3. Run `sudo udevadm control --reload`
 
 ### Configure xbuskill
@@ -29,7 +33,7 @@ RUN+="/usr/bin/xbuskill execute"
 ```sh
 # Comments and blank lines are supported in this
 # file. Commands will be run with root priviliges.
-echo "xbuskill activated at $(time)" >> /etc/xbuskill/log
+doas sed -i "$ a\buskill invoked at $(date +%s)" /etc/xbuskill/log # pipes don't work
 veracrypt -d # Dismount all veracrypt volumes right away
 shutdown now # Shut down the machine to prevent any file access
 ```
