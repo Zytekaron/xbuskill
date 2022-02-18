@@ -33,7 +33,7 @@ RUN+="/usr/bin/xbuskill execute"
 ```sh
 # Comments and blank lines are supported in this
 # file. Commands will be run with root priviliges.
-doas sed -i "$ a\buskill invoked at $(date +%s)" /etc/xbuskill/log # pipes don't work
+sed -i "$ a\buskill invoked at $(date +%s)" /etc/xbuskill/log # pipes don't work
 veracrypt -d # Dismount all veracrypt volumes right away
 shutdown now # Shut down the machine to prevent any file access
 ```
