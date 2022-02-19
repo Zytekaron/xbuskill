@@ -8,41 +8,21 @@ namespace c {
 #include <unistd.h>
 } // namespace c
 
+namespace fs = std::filesystem;
+
+int program(std::string action);
 void status();
+void execute();
 void enable();
 void disable();
-void execute();
-void list();
+void config();
 
-const char* usage = "usage: xbuskill <enable|disable|status|execute|list>";
+const char* usage = "usage: xbuskill <enable|disable|status|execute|config>";
 
-auto configFilePath = std::filesystem::path("/etc/xbuskill/config");
-auto statusFilePath = std::filesystem::path("/tmp/xbuskill");
-
-int program(std::string action) {
-    if (action == "status") {
-        status();
-    } else if (action == "enable") {
-        enable();
-    } else if (action == "disable") {
-        disable();
-    } else if (action == "execute") {
-        execute();
-    } else if (action == "list") {
-        list();
-    } else {
-        std::cout << usage << std::endl;
-        return 1;
-    }
-
-    return 0;
-}
+auto configFilePath = fs::path("/etc/xbuskill/config");
+auto statusFilePath = fs::path("/tmp/xbuskill");
 
 int main(int argc, char** argv) {
-    if (c::getuid() != 0) {
-        std::cout << "xbuskill must be run with root privileges" << std::endl;
-        return 1;
-    }
     if (argc < 2) {
         std::cout << usage << std::endl;
         return 1;
@@ -54,6 +34,25 @@ int main(int argc, char** argv) {
         std::cout << error << std::endl;
         return 1;
     }
+}
+
+int program(std::string action) {
+    if (action == "status") {
+        status();
+    } else if (action == "execute") {
+        execute();
+    } else if (action == "enable") {
+        enable();
+    } else if (action == "disable") {
+        disable();
+    } else if (action == "config") {
+        config();
+    } else {
+        std::cout << usage << std::endl;
+        return 1;
+    }
+
+    return 0;
 }
 
 std::vector<std::string> load_commands() {
@@ -79,48 +78,47 @@ std::vector<std::string> load_commands() {
     return vec;
 }
 
-bool is_active() {
-    return std::filesystem::exists(statusFilePath);
+bool is_enabled() {
+    return fs::exists(statusFilePath);
 }
 
 void status() {
-    if (is_active()) {
+    if (is_enabled()) {
         std::cout << "xbuskill is enabled" << std::endl;
     } else {
         std::cout << "xbuskill is disabled" << std::endl;
     }
 }
 
+void execute() {
+    if (!is_enabled()) {
+        return;
+    }
+
+    std::cout << "executing kill script" << std::endl;
+
+    for (auto command : load_commands()) {
+        std::system(command.c_str());
+    }
+}
+
 void enable() {
-    if (is_active()) {
+    if (is_enabled()) {
         std::cout << "xbuskill is already enabled" << std::endl;
     } else {
         std::ofstream{statusFilePath};
-        std::cout << "xbuskill is now enabled" << std::endl;
     }
 }
 
 void disable() {
-    if (is_active()) {
-        std::filesystem::remove(statusFilePath);
-        std::cout << "xbuskill is now disabled" << std::endl;
+    if (is_enabled()) {
+        fs::remove(statusFilePath);
     } else {
         std::cout << "xbuskill is already disabled" << std::endl;
     }
 }
 
-void execute() {
-    if (!is_active()) {
-        return;
-    }
-
-    for (auto command : load_commands()) {
-        std::cout << "$ " << command << std::endl;
-        std::system(command.c_str());
-    }
-}
-
-void list() {
+void config() {
     for (auto command : load_commands()) {
         std::cout << command << std::endl;
     }
